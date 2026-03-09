@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Result Analyzer Dashboard</title>
+    <!-- Cyberpunk Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Animated Grid Background -->
+    <div class="grid-background"></div>
+
+    <!-- Initial Loading Indicator -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="spinner"></div>
+        <p class="glitch-text" data-text="ANALYZING DATA...">ANALYZING DATA...</p>
+    </div>
+
+    <!-- Header -->
+    <header class="dashboard-header">
+        <h1 class="neon-title">RESULT ANALYZER DASHBOARD</h1>
+        <p class="subtext">Automatic result tracking and probability analysis_</p>
+    </header>
+
+    <!-- Main Dashboard Container -->
+    <main class="dashboard-container">
+        
+        <!-- Top Row: Stats & Prediction -->
+        <div class="top-row">
+            <!-- Statistics Panel -->
+            <div class="glass-card panel-stats">
+                <div class="card-header">
+                    <h2>LIVE STATISTICS</h2>
+                    <span class="status-indicator glowing-pulse"></span>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-box neon-green-border">
+                        <span class="stat-label">GREEN %</span>
+                        <span class="stat-value" id="stat-green">0%</span>
+                    </div>
+                    <div class="stat-box neon-red-border">
+                        <span class="stat-label">RED %</span>
+                        <span class="stat-value" id="stat-red">0%</span>
+                    </div>
+                    <div class="stat-box neon-violet-border">
+                        <span class="stat-label">VIOLET %</span>
+                        <span class="stat-value" id="stat-violet">0%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Prediction Panel -->
+            <div class="glass-card panel-prediction">
+                <div class="card-header">
+                    <h2>AI PREDICTION</h2>
+                    <button id="force-refresh-btn" class="glow-btn">SYNC NOW</button>
+                </div>
+                <div class="prediction-content">
+                    <p class="prediction-label">SUGGESTED NEXT COLOR</p>
+                    <div id="prediction-result" class="prediction-value">-</div>
+                    <p class="prediction-logic" id="prediction-logic">Awaiting data...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Middle Row: Chart & Table -->
+        <div class="bottom-row">
+            <!-- Chart Panel -->
+            <div class="glass-card panel-chart">
+                <div class="card-header">
+                    <h2>COLOR DISTRIBUTION</h2>
+                </div>
+                <div class="chart-container">
+                    <canvas id="colorChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Result Table Panel -->
+            <div class="glass-card panel-table">
+                <div class="card-header">
+                    <h2>LATEST RESULTS (LAST 20)</h2>
+                </div>
+                <div class="table-container">
+                    <table id="result-table">
+                        <thead>
+                            <tr>
+                                <th>ROUND</th>
+                                <th>NUMBER</th>
+                                <th>COLOR</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body">
+                            <!-- Rows injected by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Floating Analyzer Widget -->
+    <div class="floating-widget glass-card">
+        <div class="widget-header">
+            <h3>TERMINAL.WIDGET</h3>
+        </div>
+        <div class="widget-body">
+            <div class="widget-row"><span class="w-label">P(GREEN):</span> <span id="w-green" class="w-val green-text">0%</span></div>
+            <div class="widget-row"><span class="w-label">P(RED):</span> <span id="w-red" class="w-val red-text">0%</span></div>
+            <div class="widget-row"><span class="w-label">P(VIOLET):</span> <span id="w-violet" class="w-val violet-text">0%</span></div>
+            <hr class="neon-divider">
+            <div class="widget-row"><span class="w-label">TARGET:</span> <span id="w-target" class="w-val">--</span></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
