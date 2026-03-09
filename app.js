@@ -1,73 +1,78 @@
-// আপনার Google Firebase Console থেকে Config কপি করে এখানে বসান
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-import { getFirestore, collection, getDocs, orderBy, query, limit } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+// ডেমো ডেটা (এটি আপনার Firebase বা API থেকে আসবে)
+// খেয়াল করুন পিরিয়ড নাম্বার অনেক বড়, কিন্তু আমরা কোডে শুধু শেষের ৩টি নেব
+let mockData =[
+    { period: "202603091057005", color: "Red", number: 4 },
+    { period: "202603091057004", color: "Green", number: 7 },
+    { period: "202603091057003", color: "Red", number: 2 },
+    { period: "202603091057002", color: "Red", number: 4 },
+    { period: "202603091057001", color: "Green", number: 3 }
+];
 
-// Your web app's Firebase configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyC9adD2icBjC5lclWUChvSoEocEbqlrCkw",
-  authDomain: "raj-bhai-sureshoot.firebaseapp.com",
-  databaseURL: "https://raj-bhai-sureshoot-default-rtdb.firebaseio.com",
-  projectId: "raj-bhai-sureshoot",
-  storageBucket: "raj-bhai-sureshoot.firebasestorage.app",
-  messagingSenderId: "222410232117",
-  appId: "1:222410232117:web:037b1d1084ed7a8b18fc7c"
-};
+let currentServer = '1min';
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-// ডেমো ডেটা (যদি ফায়ারবেস কানেক্ট না থাকে, তবে এটি দিয়ে টেস্ট করতে পারেন)
-let recentResults = ["Red", "Red", "Red", "Green", "Red"];
-
-async function fetchRealTimeData() {
-    try {
-        // ফায়ারবেস থেকে রিয়েল-টাইম ডেটা আনার কোড
-        const q = query(collection(db, "history"), orderBy("time", "desc"), limit(5));
-        const querySnapshot = await getDocs(q);
-        recentResults =[];
-        querySnapshot.forEach((doc) => {
-            recentResults.push(doc.data().color);
-        });
-        updateUI();
-        analyzeData();
-    } catch (error) {
-        console.log("Firebase connect হয়নি, ডেমো ডেটা ব্যবহার করা হচ্ছে।");
-        updateUI();
-    }
+window.switchServer = function(server) {
+    currentServer = server;
+    // এখানে Tab change হওয়ার লজিক
+    document.querySelectorAll('.server-tabs button').forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+    
+    document.getElementById('prediction-result').innerText = "WAITING FOR DATA...";
+    document.getElementById('prediction-result').style.color = "#00ff00";
+    
+    loadData(); // সার্ভার বদলালে নতুন ডেটা লোড হবে
 }
 
-function updateUI() {
-    const list = document.getElementById("history-list");
-    list.innerHTML = "";
-    recentResults.forEach(color => {
-        let li = document.createElement("li");
-        li.textContent = color;
-        li.className = color.toLowerCase();
-        list.appendChild(li);
+function loadData() {
+    const tbody = document.getElementById('history-list');
+    tbody.innerHTML = "";
+
+    mockData.forEach((item, index) => {
+        // [আসল ট্রিক] পিরিয়ডের শেষের ৩টি সংখ্যা বের করার লজিক
+        let shortPeriod = String(item.period).slice(-3);
+        
+        // পরবর্তী পিরিয়ড নাম্বার সেট করা (সবচেয়ে নতুন ডেটার সাথে 1 যোগ করে)
+        if(index === 0) {
+            let nextPeriodNum = (parseInt(shortPeriod) + 1).toString().padStart(3, '0');
+            document.getElementById('next-period').innerText = nextPeriodNum;
+        }
+
+        let tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>${shortPeriod}</td>
+            <td class="${item.color.toLowerCase()}">[ ${item.color.toUpperCase()} ]</td>
+            <td>${item.number}</td>
+        `;
+        tbody.appendChild(tr);
     });
 }
 
-// প্রেডিকশন ফর্মুলা (Algorithm)
-window.analyzeData = function() {
-    const resultText = document.getElementById("prediction-result");
-    
-    // সিম্পল লজিক: শেষ ৩টি ট্রেড চেক করা
-    let lastThree = recentResults.slice(0, 3);
-    
-    if (lastThree[0] === lastThree[1] && lastThree[1] === lastThree[2]) {
-        // যদি টানা ৩ বার একই কালার আসে, তবে পরেরটি অন্য কালার হওয়ার চান্স বেশি
-        let prediction = lastThree[0] === "Red" ? "Green 🟢" : "Red 🔴";
-        resultText.innerHTML = `সম্ভাবনা বেশি: <span style="color:${prediction.includes('Green') ? 'green' : 'red'}">${prediction}</span>`;
-    } else {
-        // প্যাটার্ন না পেলে সবথেকে কম আসা কালারটি প্রেডিক্ট করা
-        let redCount = recentResults.filter(c => c === "Red").length;
-        let greenCount = recentResults.filter(c => c === "Green").length;
+window.executeAnalysis = function() {
+    const resultBox = document.getElementById('prediction-result');
+    resultBox.innerText = "ANALYZING ALGORITHM...";
+    resultBox.style.color = "#ffcc00"; // Yellow while analyzing
+
+    // হ্যাকিং এর ফিল দেওয়ার জন্য ২ সেকেন্ড ডিলে (Delay)
+    setTimeout(() => {
+        // লাস্ট ৩টা কালার বের করা
+        let lastThree = [mockData[0].color, mockData[1].color, mockData[2].color];
         
-        let prediction = redCount > greenCount ? "Green 🟢" : "Red 🔴";
-        resultText.innerHTML = `প্যাটার্ন অনুযায়ী: <span style="color:${prediction.includes('Green') ? 'green' : 'red'}">${prediction}</span>`;
-    }
+        let prediction = "";
+        let colorCode = "";
+
+        // অ্যানালাইসিস লজিক
+        if (lastThree[0] === lastThree[1] && lastThree[1] === lastThree[2]) {
+            prediction = lastThree[0] === "Red" ? "GREEN" : "RED";
+        } else {
+            let redCount = lastThree.filter(c => c === "Red").length;
+            prediction = redCount >= 2 ? "GREEN" : "RED"; 
+        }
+
+        colorCode = prediction === "GREEN" ? "#33ff33" : "#ff3333";
+        
+        resultBox.innerHTML = `> TARGET: <span style="color:${colorCode}; text-shadow: 0 0 10px ${colorCode}; font-weight:bold;">${prediction}</span> <`;
+        resultBox.style.color = "#fff";
+    }, 2000);
 }
 
-// পেজ লোড হলে ডেটা ফেচ করবে
-window.onload = fetchRealTimeData;
+// প্রথমবার পেজ লোড হলে ডেটা দেখাবে
+window.onload = loadData;
