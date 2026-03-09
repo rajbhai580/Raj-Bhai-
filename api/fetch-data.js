@@ -1,5 +1,5 @@
 export default async function handler(req, res) {
-    // অন্য ওয়েবসাইট থেকে ডেটা আনার জন্য ব্রাউজারের সিকিউরিটি বাইপাস (CORS Allow)
+    // CORS Headers
     res.setHeader('Access-Control-Allow-Credentials', true);
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
@@ -11,36 +11,51 @@ export default async function handler(req, res) {
     }
 
     try {
-        // ১. বর্তমান সময়ের টাইমস্ট্যাম্প (যাতে সবসময় নতুন ডেটা আসে)
         const currentTimestamp = Date.now();
         const apiUrl = `https://draw.ar-lottery01.com/WinGo/WinGo_1M/GetHistoryIssuePage.json?ts=${currentTimestamp}`;
 
-        // ২. আসল সাইটে রিকোয়েস্ট পাঠানো
         const response = await fetch(apiUrl, {
             method: "GET",
             headers: {
                 "accept": "application/json, text/plain, */*",
                 "accept-language": "en-US,en;q=0.9",
-                "Referer": "https://www.barakunda.com/", // এটি না দিলে ওরা ডেটা দেবে না
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+                "Referer": "https://www.barakunda.com/", // Very Important Bypass
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                "sec-fetch-mode": "cors",
+                "sec-fetch-site": "cross-site"
             }
         });
 
+        // ডেটা JSON হিসেবে পড়ার আগে Text হিসেবে পড়ছি, যাতে ক্র্যাশ না করে
+        const textData = await response.text();
+
+        // যদি টার্গেট সার্ভার ব্লক করে (যেমন 403 Forbidden)
         if (!response.ok) {
-            throw new Error(`Target Server Error: ${response.status}`);
+            return res.status(500).json({ 
+                success: false, 
+                error: `Target server rejected the request with status: ${response.status}`, 
+                details: textData.substring(0, 200) // কী এরর দিয়েছে তার প্রথম ২০০ অক্ষর
+            });
         }
 
-        // ৩. ডেটা রিসিভ করা
-        const rawData = await response.json();
-
-        // ৪. আপনার ওয়েবসাইটে ডেটা পাঠানো
-        res.status(200).json({
-            success: true,
-            data: rawData
-        });
+        // টেক্সটকে JSON এ রূপান্তর করার চেষ্টা
+        try {
+            const jsonData = JSON.parse(textData);
+            res.status(200).json({
+                success: true,
+                data: jsonData
+            });
+        } catch (parseError) {
+            // যদি সাইটটি JSON না দিয়ে HTML ক্যাপচা পেজ দেয়
+            return res.status(500).json({ 
+                success: false, 
+                error: "Target server did not return valid JSON. Might be blocking Vercel IP.", 
+                details: textData.substring(0, 200)
+            });
+        }
 
     } catch (error) {
-        console.error("[ SYSTEM ERROR ]", error);
+        console.error("[ SERVER ERROR ]", error.message);
         res.status(500).json({ success: false, error: error.message });
     }
 }
