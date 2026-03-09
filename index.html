@@ -1,30 +1,52 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Color Trading Analyzer</title>
+    <title>WINGO AI ANALYZER // ROOT SYSTEM</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <h1>ট্রেডিং এনালাইজার টুল</h1>
-        
-        <div class="card">
-            <h2>পূর্বের রেজাল্ট (History)</h2>
-            <ul id="history-list">
-                <!-- Data will load here via JavaScript -->
-            </ul>
+    <div class="terminal">
+        <header>
+            <h1>[ WINGO AI PREDICTION ENGINE ]</h1>
+            <p id="system-status">STATUS: CONNECTED // BYPASSING SECURITY...</p>
+        </header>
+
+        <div class="server-tabs">
+            <button class="active" onclick="switchServer('1min')">WINGO 1 Min</button>
+            <button onclick="switchServer('30sec')">WINGO 30 Sec</button>
+            <button onclick="switchServer('3min')">WINGO 3 Min</button>
+            <button onclick="switchServer('5min')">WINGO 5 Min</button>
         </div>
 
-        <div class="card prediction-box">
-            <h2>পরবর্তী প্রেডিকশন</h2>
-            <p id="prediction-result">এনালাইজ করা হচ্ছে...</p>
-            <button onclick="analyzeData()">প্রেডিকশন আপডেট করুন</button>
+        <div class="main-panel">
+            <div class="data-stream">
+                <h3>[ LIVE DATA STREAM ]</h3>
+                <table id="history-table">
+                    <thead>
+                        <tr>
+                            <th>PERIOD</th>
+                            <th>RESULT</th>
+                            <th>NUMBER</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history-list">
+                        <!-- Data will be injected here -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="prediction-panel">
+                <h3>[ AI PREDICTION ALGORITHM ]</h3>
+                <div class="target-period">TARGET PERIOD: <span id="next-period">---</span></div>
+                <div class="result-box" id="prediction-result">WAITING FOR DATA...</div>
+                <button class="hack-btn" onclick="executeAnalysis()">INITIALIZE ANALYSIS</button>
+            </div>
         </div>
     </div>
 
-    <!-- Firebase SDK (Google Console) -->
+    <!-- Firebase SDK here (Same as before) -->
     <script type="module" src="app.js"></script>
 </body>
 </html>
