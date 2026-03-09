@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ROOT ADMIN // CONTROL PANEL</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="terminal">
+        <header>
+            <h1>[ ROOT ADMIN PANEL ]</h1>
+            <p>TOTAL DATA COLLECTED: <span id="data-count">0</span> trades</p>
+        </header>
+
+        <div class="admin-controls">
+            <h2>MASTER SWITCH</h2>
+            <p>Current Status: <span id="admin-status" class="offline">OFFLINE</span></p>
+            <button class="btn-green" onclick="toggleSystem(true)">ACTIVATE SYSTEM</button>
+            <button class="btn-red" onclick="toggleSystem(false)">DEACTIVATE SYSTEM</button>
+        </div>
+    </div>
+    <script type="module" src="admin.js"></script>
+</body>
+</html>
