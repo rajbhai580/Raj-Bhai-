@@ -3,50 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WINGO AI ANALYZER // ROOT SYSTEM</title>
+    <title>WINGO AI PREDICTOR</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="terminal">
         <header>
-            <h1>[ WINGO AI PREDICTION ENGINE ]</h1>
-            <p id="system-status">STATUS: CONNECTED // BYPASSING SECURITY...</p>
+            <h1>[ WINGO AI PREDICTOR ]</h1>
+            <p id="system-status" class="offline">STATUS: SYSTEM OFFLINE (COLLECTING DATA...)</p>
         </header>
-
-        <div class="server-tabs">
-            <button class="active" onclick="switchServer('1min')">WINGO 1 Min</button>
-            <button onclick="switchServer('30sec')">WINGO 30 Sec</button>
-            <button onclick="switchServer('3min')">WINGO 3 Min</button>
-            <button onclick="switchServer('5min')">WINGO 5 Min</button>
-        </div>
 
         <div class="main-panel">
             <div class="data-stream">
                 <h3>[ LIVE DATA STREAM ]</h3>
-                <table id="history-table">
+                <table>
                     <thead>
-                        <tr>
-                            <th>PERIOD</th>
-                            <th>RESULT</th>
-                            <th>NUMBER</th>
-                        </tr>
+                        <tr><th>PERIOD</th><th>RESULT</th><th>NUMBER</th></tr>
                     </thead>
                     <tbody id="history-list">
-                        <!-- Data will be injected here -->
+                        <!-- Data loads here -->
                     </tbody>
                 </table>
             </div>
 
             <div class="prediction-panel">
-                <h3>[ AI PREDICTION ALGORITHM ]</h3>
+                <h3>[ AI PREDICTION ]</h3>
                 <div class="target-period">TARGET PERIOD: <span id="next-period">---</span></div>
-                <div class="result-box" id="prediction-result">WAITING FOR DATA...</div>
-                <button class="hack-btn" onclick="executeAnalysis()">INITIALIZE ANALYSIS</button>
+                <div class="result-box" id="prediction-result">SYSTEM IS INACTIVE</div>
+                <button class="hack-btn" onclick="executeAnalysis()" id="analyze-btn" disabled>INITIALIZE ANALYSIS</button>
             </div>
         </div>
     </div>
 
-    <!-- Firebase SDK here (Same as before) -->
+    <!-- Firebase SDK -->
     <script type="module" src="app.js"></script>
 </body>
 </html>
