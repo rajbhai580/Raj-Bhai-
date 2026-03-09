@@ -2,13 +2,15 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getFirestore, collection, getDocs, orderBy, query, limit } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
+// Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyC9adD2icBjC5lclWUChvSoEocEbqlrCkw",
+  authDomain: "raj-bhai-sureshoot.firebaseapp.com",
+  databaseURL: "https://raj-bhai-sureshoot-default-rtdb.firebaseio.com",
+  projectId: "raj-bhai-sureshoot",
+  storageBucket: "raj-bhai-sureshoot.firebasestorage.app",
+  messagingSenderId: "222410232117",
+  appId: "1:222410232117:web:037b1d1084ed7a8b18fc7c"
 };
 
 // Initialize Firebase
