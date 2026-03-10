@@ -35,12 +35,15 @@ onSnapshot(collection(db, "history"), (snapshot) => {
     document.getElementById("data-count").innerText = snapshot.size;
 });
 
-// বাটন ক্লিক ফাংশন (updateDoc এর বদলে setDoc ব্যবহার করা হলো)
-window.toggleSystem = async function(status) {
+/window.toggleSystem = async function(status) {
     try {
-        // { merge: true } দেওয়ার কারণে ডকুমেন্ট না থাকলে নিজে তৈরি করে নেবে
-        await setDoc(statusDocRef, { active: status }, { merge: true });
-        alert(status ? "SYSTEM ACTIVATED!" : "SYSTEM DEACTIVATED!");
+        // status true হলে বর্তমান টাইমস্ট্যাম্প সেভ করবে, false হলে ০ করে দেবে
+        let activationData = { 
+            active: status,
+            activated_at: status ? Date.now() : 0 
+        };
+        await setDoc(statusDocRef, activationData, { merge: true });
+        alert(status ? "SYSTEM ACTIVATED! Data fetching started." : "SYSTEM DEACTIVATED!");
     } catch (error) {
         console.error("Error updating system status: ", error);
         alert("Error! Check console.");
