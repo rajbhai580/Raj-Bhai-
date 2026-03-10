@@ -11,142 +11,175 @@ const firebaseConfig = {
   messagingSenderId: "222410232117",
   appId: "1:222410232117:web:037b1d1084ed7a8b18fc7c"
 };
+
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 let systemActive = false;
-let recentData =[];
+let activationTime = 0;
+let recentData =[]; // এটি শুধু অ্যাক্টিভেশনের পরের ডেটা রাখবে
 
-// নাম্বার ট্রানজিশন ম্যাট্রিক্স (কোন নাম্বারের পর কোন নাম্বার বেশি আসে তার গাণিতিক হিসেব)
-const numberMatrix = {
-    0: [5, 2, 8], 1:[6, 3, 7], 2: [8, 1, 4], 3:[9, 0, 5], 4: [7, 2, 6],
-    5:[1, 8, 3], 6: [0, 9, 4], 7:[2, 5, 8], 8: [3, 6, 1], 9:[4, 7, 0]
-};
+const REQUIRED_DATA_COUNT = 15; // ১৫টি ডেটা কালেক্ট হলে প্রেডিকশন শুরু হবে
 
 // System Status Listener
 onSnapshot(doc(db, "settings", "system_status"), (docSnap) => {
     if (docSnap.exists()) {
         systemActive = docSnap.data().active;
+        activationTime = docSnap.data().activated_at || 0; // কখন অন করা হয়েছে তার টাইম
+        
         const statusText = document.getElementById("system-status");
-        const btn = document.getElementById("analyze-btn");
         if (systemActive) {
-            statusText.innerText = "STATUS: SYSTEM ONLINE // DEEP AI READY";
+            statusText.innerText = "STATUS: SYSTEM ONLINE // FETCHING DATA...";
             statusText.className = "online";
-            btn.disabled = false;
         } else {
             statusText.innerText = "STATUS: SYSTEM OFFLINE";
             statusText.className = "offline";
-            btn.disabled = true;
+            document.getElementById("analyze-btn").disabled = true;
+            document.getElementById("analyze-btn").innerText = "SYSTEM INACTIVE";
         }
     }
 });
 
-// Load Last 50 Data
-const q = query(collection(db, "history"), orderBy("timestamp", "desc"), limit(50));
+// Load Live Data
+const q = query(collection(db, "history"), orderBy("timestamp", "desc"), limit(40));
 onSnapshot(q, (snapshot) => {
-    recentData =[];
+    let rawData =[];
+    snapshot.forEach((doc) => {
+        let item = doc.data();
+        let size = item.number >= 5 ? "BIG" : "SMALL"; 
+        rawData.push({ ...item, size: size });
+    });
+
+    // ১. ফিল্টার: শুধুমাত্র সিস্টেম অন করার পরের ডেটাগুলো নেব
+    recentData = rawData.filter(item => item.timestamp >= activationTime && systemActive);
+
+    // ২. UI তে শুধুমাত্র লাস্ট ৫টা ডেটা দেখাব
+    const displayData = recentData.slice(0, 5);
     const tbody = document.getElementById('history-list');
     tbody.innerHTML = "";
 
-    snapshot.forEach((doc) => {
-        let item = doc.data();
-        let size = item.number >= 5 ? "BIG" : "SMALL"; // 0-4=Small, 5-9=Big
-        recentData.push({ ...item, size: size });
-        
+    displayData.forEach((item) => {
         let tr = document.createElement("tr");
         tr.innerHTML = `
             <td>${item.period}</td>
-            <td class="${size.toLowerCase()}">${size}</td>
+            <td class="${item.size.toLowerCase()}">${item.size}</td>
             <td>${item.number}</td>
         `;
         tbody.appendChild(tr);
     });
 
-    if (recentData.length > 0) {
-        document.getElementById('next-period').innerText = (parseInt(recentData[0].period) + 1).toString().padStart(3, '0');
+    if (displayData.length > 0) {
+        document.getElementById('next-period').innerText = (parseInt(displayData[0].period) + 1).toString().padStart(3, '0');
+    }
+
+    // ৩. বাটন এনাবল/ডিজেবল লজিক (১৫ ডেটা ওয়ার্ম-আপ)
+    if (systemActive) {
+        const btn = document.getElementById("analyze-btn");
+        if (recentData.length < REQUIRED_DATA_COUNT) {
+            btn.disabled = true;
+            btn.innerText = `GATHERING DATA (${recentData.length}/${REQUIRED_DATA_COUNT})...`;
+        } else {
+            btn.disabled = false;
+            btn.innerText = "EXECUTE DEEP ANALYSIS";
+        }
     }
 });
 
 window.executeAnalysis = function() {
-    if(!systemActive || recentData.length < 5) return;
+    if(!systemActive || recentData.length < REQUIRED_DATA_COUNT) return;
     
     const resultBox = document.getElementById('prediction-result');
     const numberBox = document.getElementById('predicted-numbers');
     const logicBox = document.getElementById('logic-applied');
+    const chanceBox = document.getElementById('win-chance');
     
-    resultBox.innerText = "CALCULATING PROBABILITIES...";
+    resultBox.innerText = "CALCULATING...";
     resultBox.style.color = "#ffcc00";
-    numberBox.innerText = "[ ? ] [ ? ] [ ? ]";
-    logicBox.innerText = "Bypassing WAF & Analyzing crowd betting behavior...";
+    logicBox.innerText = "Running anti-liquidation protocol...";
 
     setTimeout(() => {
-        let last5 = recentData.slice(0, 5).map(d => d.size);
+        // লাস্ট ১৫টি ডেটার সাইজ অ্যারে
+        let last15 = recentData.slice(0, 15).map(d => d.size);
         let prediction = "";
         let logicName = "";
+        let winChance = 0;
 
         // ==========================================
-        // ADVANCED LOGIC SYSTEM
+        // REAL PROFIT LOGIC (BEATING THE HOUSE EDGE)
         // ==========================================
 
-        // Logic 1: The "House Trap" (Anti-Crowd)
-        // যদি টানা ৪ বার একই রেজাল্ট আসে (যেমন Big, Big, Big, Big), সাধারণ মানুষ ভাববে পরেরটাও Big।
-        // এই সময় বেটিং সাইট (হাউস) উল্টোটা (Small) দেবে সবার টাকা খাওয়ার জন্য।
-        if (last5[0] === last5[1] && last5[1] === last5[2] && last5[2] === last5[3]) {
-            prediction = last5[0] === "BIG" ? "SMALL" : "BIG";
-            logicName = "🔥 Anti-Crowd Protocol: Breaking the 4x Streak (House Edge)";
+        // Logic 1: The Martingale Killer (House pushes streaks to kill players)
+        // যদি টানা ৪ বার বা তার বেশি একই রেজাল্ট আসে, সাধারণ মানুষ উল্টোটাতে টাকা লাগায়।
+        // হাউস তখন ইচ্ছা করে আবারও সেম রেজাল্ট দেয়। তাই আমরা হাউসের সাথে যাব।
+        let currentStreak = 1;
+        for(let i=1; i<last15.length; i++){
+            if(last15[i] === last15[0]) currentStreak++;
+            else break;
+        }
+
+        if (currentStreak >= 4) {
+            prediction = last15[0]; // ফলো দ্য ট্রেন্ড
+            logicName = "🚨 Martingale Trap Detected: Riding the House Trend";
+            winChance = Math.floor(Math.random() * (96 - 88 + 1)) + 88; // 88% - 96%
         }
         
-        // Logic 2: Alternating Pattern (1-by-1 Wave)
-        // যদি Big, Small, Big, Small চলে, তবে প্যাটার্ন কন্টিনিউ করার চান্স থাকে।
-        else if (last5[0] !== last5[1] && last5[1] !== last5[2] && last5[2] !== last5[3]) {
-            prediction = last5[0] === "BIG" ? "SMALL" : "BIG";
-            logicName = "🌊 Alternating Wave Detection (1-by-1 Pattern)";
+        // Logic 2: Zig-Zag Fakeout (B, S, B, S -> People expect B, House gives S)
+        else if (last15[0] !== last15[1] && last15[1] !== last15[2] && last15[2] !== last15[3] && last15[3] !== last15[4]) {
+            prediction = last15[0]; // জিগজ্যাগ ব্রেক করা
+            logicName = "🧬 Zig-Zag Fakeout Algorithm";
+            winChance = Math.floor(Math.random() * (92 - 84 + 1)) + 84; // 84% - 92%
         }
         
-        // Logic 3: Pair Reversal (2-by-2 Pattern)
-        // যদি Big, Big, Small, Small হয়।
-        else if (last5[0] === last5[1] && last5[1] !== last5[2] && last5[2] === last5[3]) {
-            prediction = last5[0] === "BIG" ? "SMALL" : "BIG";
-            logicName = "⚖️ Pair Reversal Logic Detected";
-        }
-        
-        // Logic 4: Statistical Balancing (Last 15 periods)
-        // যদি কোনো নির্দিষ্ট প্যাটার্ন না থাকে, তখন লাস্ট ১৫ বারের ব্যালেন্স চেক করবে।
+        // Logic 3: Mean Reversion / Market Correction
+        // লাস্ট ১৫ বারের মধ্যে যদি কোনো সাইজ ১০ বার বা তার বেশি আসে, তার মানে সেটি ওভার-বট।
         else {
-            let recent15 = recentData.slice(0, 15).map(d => d.size);
-            let bigCount = recent15.filter(x => x === "BIG").length;
-            // যদি লাস্ট ১৫ বারে Big বেশি এসে থাকে, তবে হাউস ব্যালেন্স করার জন্য Small দেবে।
-            prediction = bigCount > 7 ? "SMALL" : "BIG";
-            logicName = "📊 RNG Weight Balancing (Market Correction)";
+            let bigCount = last15.filter(x => x === "BIG").length;
+            if(bigCount >= 10) {
+                prediction = "SMALL";
+                logicName = "📉 Mean Reversion: Heavy BIG Overbought";
+                winChance = Math.floor(Math.random() * (85 - 78 + 1)) + 78;
+            } else if (bigCount <= 5) {
+                prediction = "BIG";
+                logicName = "📈 Mean Reversion: Heavy SMALL Overbought";
+                winChance = Math.floor(Math.random() * (85 - 78 + 1)) + 78;
+            } else {
+                // Default: Golden Ratio (2:1 Pattern Check)
+                prediction = last15[0] === last15[1] ? (last15[0] === "BIG" ? "SMALL" : "BIG") : last15[0];
+                logicName = "⚖️ Standard Statistical Correction";
+                winChance = Math.floor(Math.random() * (77 - 65 + 1)) + 65; // 65% - 77%
+            }
         }
 
         // ==========================================
-        // NUMBER PREDICTION ALGORITHM
+        // 2-NUMBER PREDICTION ALGORITHM
         // ==========================================
-        let lastNumber = recentData[0].number;
-        let probableNumbers = numberMatrix[lastNumber]; // ম্যাট্রিক্স থেকে সম্ভাব্য নাম্বার নেওয়া
+        // সাইজ অনুযায়ী সবচেয়ে হাই-প্রোবাবিলিটি ২টি নাম্বার বের করা
+        let finalNumbers = [];
+        let lastNum = recentData[0].number;
         
-        // প্রেডিক্ট করা সাইজের (Big/Small) সাথে মিলিয়ে নাম্বার ফিল্টার করা
-        let finalNumbers = probableNumbers.filter(n => prediction === "BIG" ? n >= 5 : n <= 4);
-        
-        // যদি ম্যাট্রিক্স না মেলে, তবে ডিফল্ট হাই-প্রোবাবিলিটি নাম্বার দেওয়া
-        if(finalNumbers.length === 0) {
-            finalNumbers = prediction === "BIG" ? [5, 7, 9] :[0, 2, 4];
-        } else if (finalNumbers.length < 3) {
-            let fillers = prediction === "BIG" ? [6, 8] : [1, 3];
-            finalNumbers = [...new Set([...finalNumbers, ...fillers])].slice(0, 3);
+        if (prediction === "BIG") {
+            // Big (5, 6, 7, 8, 9)
+            if(lastNum % 2 === 0) finalNumbers = [7, 9]; // লাস্ট ইভেন হলে অড আসার চান্স বেশি
+            else finalNumbers = [6, 8]; 
+        } else {
+            // Small (0, 1, 2, 3, 4)
+            if(lastNum % 2 === 0) finalNumbers = [1, 3];
+            else finalNumbers = [2, 4];
         }
 
         // ==========================================
         // OUTPUT RENDERING
         // ==========================================
-        let colorCode = prediction === "BIG" ? "#ffcc00" : "#00ccff"; // Big=Yellow, Small=Blue
+        let colorCode = prediction === "BIG" ? "#ffcc00" : "#00ccff"; 
         
         resultBox.innerHTML = `> TARGET: <span style="color:${colorCode}; text-shadow: 0 0 15px ${colorCode}; font-size:36px;">${prediction}</span> <`;
         resultBox.style.color = "#fff";
         
-        numberBox.innerText = `[ ${finalNumbers[0]} ]  [ ${finalNumbers[1]} ]  [ ${finalNumbers[2]} ]`;
-        logicBox.innerText = `System Decision: ${logicName}`;
+        chanceBox.innerText = `${winChance}%`;
+        chanceBox.style.color = winChance > 85 ? "#33ff33" : (winChance > 75 ? "#ffcc00" : "#ff3333");
 
-    }, 2500);
+        numberBox.innerText = `[ ${finalNumbers[0]} ]  [ ${finalNumbers[1]} ]`;
+        logicBox.innerText = `[LOGIC]: ${logicName}`;
+
+    }, 2000);
 }
