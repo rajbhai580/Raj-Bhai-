@@ -3,19 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WINGO ROOT AI // BIG-SMALL ANALYZER</title>
+    <title>WINGO ROOT AI // PROFIT ENGINE</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="terminal">
         <header>
-            <h1>[ WINGO V2.0 // DEEP AI ]</h1>
+            <h1>[ WINGO V3.0 // PROFIT ENGINE ]</h1>
             <p id="system-status" class="offline">STATUS: SYSTEM OFFLINE</p>
         </header>
 
         <div class="main-panel">
             <div class="data-stream">
                 <h3>[ LIVE DATA STREAM ]</h3>
+                <p style="font-size: 10px; color: #666; text-align: center;">Showing recent 5 periods after activation</p>
                 <table>
                     <thead>
                         <tr><th>PERIOD</th><th>SIZE</th><th>NUMBER</th></tr>
@@ -30,16 +31,18 @@
                 <h3>[ AI PREDICTION ENGINE ]</h3>
                 <div class="target-period">TARGET PERIOD: <span id="next-period">---</span></div>
                 
-                <div class="result-box" id="prediction-result">SYSTEM INACTIVE</div>
+                <div class="result-box" id="prediction-result">WAITING...</div>
+                
+                <div class="probability">WIN CHANCE: <span id="win-chance">0%</span></div>
                 
                 <div class="number-guess">
-                    <p>PROBABLE NUMBERS:</p>
-                    <div id="predicted-numbers">[ - ] [ - ] [ - ]</div>
+                    <p>HIGH ACCURACY NUMBERS:</p>
+                    <div id="predicted-numbers">[ - ] [ - ]</div>
                 </div>
 
-                <div class="logic-used" id="logic-applied">Waiting for initialization...</div>
+                <div class="logic-used" id="logic-applied">System initialized. Waiting for data...</div>
 
-                <button class="hack-btn" onclick="executeAnalysis()" id="analyze-btn" disabled>EXECUTE DEEP ANALYSIS</button>
+                <button class="hack-btn" onclick="executeAnalysis()" id="analyze-btn" disabled>INITIALIZING...</button>
             </div>
         </div>
     </div>
